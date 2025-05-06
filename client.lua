@@ -1,5 +1,45 @@
+local RSGCore = exports['rsg-core']:GetCoreObject()
+
 local prisonWagon = nil
 local wagonModel = GetHashKey("WAGONPRISON01X")
+
+-- ==== SPAWN-BEFEHL ====
+RegisterCommand("spawnprison", function()
+    RequestModel(wagonModel)
+    while not HasModelLoaded(wagonModel) do Wait(100) end
+
+    local player = PlayerPedId()
+    local coords = GetEntityCoords(player)
+
+    -- Kutsche spawnen und an den Koordinaten platzieren
+    prisonWagon = CreateVehicle(wagonModel, coords.x + 2.0, coords.y, coords.z, 0.0, true, true)
+    
+    -- Türen beim Spawn für alle Spieler verschließen
+    SetVehicleDoorsLocked(prisonWagon, 2)  -- Verriegelt das Fahrzeug
+    for door = 0, 5 do  -- Alle Türen verschließen
+        Citizen.InvokeNative(0x6A3C24B91FD0EA09, prisonWagon, door, false)  -- Schließt die Tür
+        print("✅ Tür-ID " .. door .. " geschlossen.")
+    end
+
+    local netId = NetworkGetNetworkIdFromEntity(prisonWagon)
+    if netId and netId ~= 0 then
+        -- Sende die NetID des Wagens an den Server
+        TriggerServerEvent("prisonwagon:setWagonNetId", netId)
+        -- Synchronisiere die Türzustände für alle Spieler
+        TriggerServerEvent("prisonwagon:closeAndLockDoors", netId)
+    else
+        print("^1Fehler: Keine gültige NetID!^7")
+        return
+    end
+
+    -- === Gefangenen-NPC ===
+    local prisonerModel = GetHashKey("a_m_m_fivefingerfilletplayers_01")
+    RequestModel(prisonerModel)
+    while not HasModelLoaded(prisonerModel) do Wait(100) end
+
+    local prisoner = CreatePed(prisonerModel, coords.x + 1.0, coords.y + 1.0, coords.z, 0.0, true, false, false, false)
+    TaskWarpPedIntoVehicle(prisoner, prisonWagon, 3)
+end)
 
 -- ==== /wagontuer ====
 RegisterCommand("wagontuer", function()
