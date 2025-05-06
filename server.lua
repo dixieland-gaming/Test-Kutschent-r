@@ -1,3 +1,5 @@
+local RSGCore = exports['rsg-core']:GetCoreObject()
+
 local prisonWagons = {}
 
 RegisterServerEvent("prisonwagon:setWagonNetId")
@@ -15,11 +17,10 @@ AddEventHandler("prisonwagon:openDoors", function(netId)
     end
 end)
 
-RegisterServerEvent("prisonwagon:lockVehicle")
-AddEventHandler("prisonwagon:lockVehicle", function(netId)
+RegisterServerEvent("prisonwagon:closeAndLockDoors")
+AddEventHandler("prisonwagon:closeAndLockDoors", function(netId)
     if netId then
-        -- Alle Clients benachrichtigen, um das Fahrzeug zu verriegeln und die Türen zu schließen
-        TriggerClientEvent("prisonwagon:lockVehicleClient", -1, netId)
+        TriggerClientEvent("prisonwagon:closeAndLockDoorsClient", -1, netId)
     end
 end)
 
